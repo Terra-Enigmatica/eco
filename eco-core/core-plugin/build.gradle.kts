@@ -41,7 +41,7 @@ dependencies {
     compileOnly("com.arcaniax:HeadDatabase-API:1.3.1")
     compileOnly("com.gmail.filoghost.holographicdisplays:holographicdisplays-api:2.4.0")
     compileOnly("com.github.EssentialsX:Essentials:2.18.2")
-    compileOnly("com.bgsoftware:SuperiorSkyblockAPI:1.8.3")
+    //compileOnly("com.bgsoftware:SuperiorSkyblockAPI:1.8.3")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.WhipDevelopment:CrashClaim:c697d3e9ef")
     compileOnly("com.github.decentsoftware-eu:decentholograms:2.8.5")
