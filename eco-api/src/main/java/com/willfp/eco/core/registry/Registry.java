@@ -20,7 +20,7 @@ public class Registry<T extends Registrable> implements Iterable<T> {
     /**
      * The ID pattern.
      */
-    private static final Pattern ID_PATTERN = Pattern.compile("[a-z0-9_]{1,100}");
+    private static final Pattern ID_PATTERN = Pattern.compile("[a-zа-яё0-9_-]{1,100}");
 
     /**
      * The registry.
