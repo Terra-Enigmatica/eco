@@ -1,6 +1,6 @@
 package com.willfp.eco.core.registry;
 
-import org.apache.commons.lang.Validate;
+import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +20,7 @@ public class Registry<T extends Registrable> implements Iterable<T> {
     /**
      * The ID pattern.
      */
-    private static final Pattern ID_PATTERN = Pattern.compile("[a-z0-9_]{1,100}");
+    private static final Pattern ID_PATTERN = Pattern.compile("[a-zа-яё0-9_-]{1,100}");
 
     /**
      * The registry.
@@ -57,7 +57,7 @@ public class Registry<T extends Registrable> implements Iterable<T> {
             throw new IllegalStateException("Cannot add to locked registry! (ID: " + element.getID() + ")");
         }
 
-        Validate.isTrue(ID_PATTERN.matcher(element.getID()).matches(), "ID must match pattern: " + ID_PATTERN.pattern() + " (was " + element.getID() + ")");
+        Preconditions.checkArgument(ID_PATTERN.matcher(element.getID()).matches(), "ID must match pattern: " + ID_PATTERN.pattern() + " (was " + element.getID() + ")");
 
         registry.put(element.getID(), element);
 

@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 buildscript {
@@ -6,16 +7,16 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
     }
 }
 
 plugins {
     id("java-library")
-    id("com.gradleup.shadow") version "8.3.5"
+    id("com.gradleup.shadow") version "9.3.1"
     id("maven-publish")
     id("java")
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.3.0"
 }
 
 dependencies {
@@ -28,6 +29,7 @@ dependencies {
     implementation(project(path = ":eco-core:core-nms:v1_21_7", configuration = "reobf"))
     implementation(project(path = ":eco-core:core-nms:v1_21_8", configuration = "reobf"))
     implementation(project(path = ":eco-core:core-nms:v1_21_10", configuration = "reobf"))
+    implementation(project(path = ":eco-core:core-nms:v1_21_11", configuration = "reobf"))
 }
 
 allprojects {
@@ -42,8 +44,15 @@ allprojects {
 
         maven("https://repo.auxilor.io/repository/maven-public/")
 
+        // CombatLogX (must be before JitPack to exclude sirblobman from JitPack)
+        maven("https://nexus.sirblobman.xyz/public/")
+
         maven("https://jitpack.io") {
-            content { includeGroupByRegex("com\\.github\\..*") }
+            content {
+                includeGroupByRegex("com\\.github\\..*")
+                excludeGroup("com.github.sirblobman")
+                excludeGroup("com.github.TownyAdvanced")
+            }
         }
 
         // Paper
@@ -76,17 +85,12 @@ allprojects {
         // NoCheatPlus
         maven("https://repo.md-5.net/content/repositories/snapshots/")
 
-        // CombatLogX
-        maven("https://nexus.sirblobman.xyz/public/")
 
         // MythicMobs
         maven("https://mvn.lumine.io/repository/maven-public/")
 
-        // Crunch
-        maven("https://redempt.dev")
-
         // LibsDisguises
-        maven("https://repo.md-5.net/content/groups/public/")
+        maven("https://mvn.lib.co.nz/public")
 
         // PlayerPoints
         maven("https://repo.rosewooddev.io/repository/public/")
@@ -105,31 +109,42 @@ allprojects {
 
         // Nexo
         maven("https://repo.nexomc.com/releases")
+
+        // CraftEngine
+        maven("https://repo.momirealms.net/releases/")
+
+        // CoinsEngine
+        maven("https://repo.nightexpressdev.com/releases")
+
+        //Towny
+        maven("https://repo.glaremasters.me/repository/towny/")
     }
 
     dependencies {
         // Kotlin
-        implementation(kotlin("stdlib", version = "2.1.0"))
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+        implementation(kotlin("stdlib", version = "2.3.0"))
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
         // Included in spigot jar, no need to move to implementation
-        compileOnly("org.jetbrains:annotations:23.0.0")
+        compileOnly("org.jetbrains:annotations:26.0.2")
         compileOnly("com.google.guava:guava:32.0.0-jre")
 
         // Test
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+        testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.2")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.2")
 
         // Adventure
-        implementation("net.kyori:adventure-api:4.10.1")
-        implementation("net.kyori:adventure-text-serializer-gson:4.10.1") {
+        implementation("net.kyori:adventure-api:4.26.1") {
+            exclude("com.github.ben-manes.caffeine", "caffeine")
+        }
+        implementation("net.kyori:adventure-text-serializer-gson:4.26.1") {
             exclude("com.google.code.gson", "gson") // Prevent shading into the jar
         }
-        implementation("net.kyori:adventure-text-serializer-legacy:4.10.1")
+        implementation("net.kyori:adventure-text-serializer-legacy:4.26.1")
 
         // Other
-        implementation("com.github.ben-manes.caffeine:caffeine:3.1.5")
-        implementation("org.apache.maven:maven-artifact:3.9.0")
+        implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+        implementation("org.apache.maven:maven-artifact:3.9.12")
     }
 
     tasks.withType<JavaCompile> {
@@ -153,10 +168,6 @@ allprojects {
     }
 
     tasks {
-        withType<Jar> {
-            duplicatesStrategy = DuplicatesStrategy.WARN
-        }
-
         compileKotlin {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_21)
@@ -171,6 +182,7 @@ allprojects {
 
         test {
             useJUnitPlatform()
+            include("**/*Pdf")
 
             // Show test results.
             testLogging {
@@ -197,6 +209,9 @@ allprojects {
 
 tasks {
     shadowJar {
+        exclude("META-INF/**")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
         relocate("org.bstats", "com.willfp.eco.libs.bstats")
         relocate("redempt.crunch", "com.willfp.eco.libs.crunch")
         relocate("org.apache.commons.lang3", "com.willfp.eco.libs.lang3")
@@ -220,8 +235,12 @@ tasks {
         relocate("com.moandjiezana.toml", "com.willfp.eco.libs.toml")
         relocate("com.willfp.modelenginebridge", "com.willfp.eco.libs.modelenginebridge")
 
+        relocate("kotlin", "com.willfp.eco.libs.kotlin") {
+            exclude("kotlin.kotlin_builtins")
+        }
+
         /*
-        Kotlin and caffeine are not shaded so that they can be accessed directly by eco plugins.
+        Caffeine is not shaded so that it can be accessed directly by eco plugins.
         Also, not relocating adventure, because it's a pain in the ass, and it doesn't *seem* to be causing loader constraint violations.
          */
     }
